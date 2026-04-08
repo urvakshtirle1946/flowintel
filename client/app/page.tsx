@@ -8,10 +8,14 @@ import {
   Home, Activity, Map as MapIcon, Database, Filter, 
   Search, AlertCircle, CheckCircle, BrainCircuit, Droplet, Loader2, Zap, Settings 
 } from 'lucide-react';
+import DigitalFootprint from '../components/DigitalFootprint';
+import AquaBot from '../components/AquaBot';
+import ForecastingPanel from '../components/ForecastingPanel';
 
 export default function ObservatoryDashboard() {
   const { network, readings, isConnected, isLoading } = useSocket();
   const [selectedAsset, setSelectedAsset] = useState<AssetSelection | null>(null);
+  const [activeTab, setActiveTab] = useState<'live' | 'predict' | 'footprint'>('live');
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [insights, setInsights] = useState<any[]>([]);
@@ -83,10 +87,9 @@ export default function ObservatoryDashboard() {
       <nav className="w-16 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-8 shadow-sm z-20 shrink-0">
         <div className="w-8 h-8 rounded bg-blue-600 shadow-md"></div>
         <div className="flex flex-col gap-6 text-slate-400">
-          <button className="text-blue-600 bg-blue-50 p-2 rounded-lg cursor-pointer transition-colors"><Home size={20}/></button>
-          <button className="hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors cursor-pointer"><Database size={20}/></button>
-          <button className="hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors cursor-pointer"><MapIcon size={20}/></button>
-          <button className="hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors cursor-pointer"><Activity size={20}/></button>
+          <button onClick={() => setActiveTab('live')} className={`p-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'live' ? 'text-blue-600 bg-blue-50' : 'hover:text-slate-600 hover:bg-slate-50'}`}><Home size={20}/></button>
+          <button onClick={() => setActiveTab('predict')} className={`p-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'predict' ? 'text-blue-600 bg-blue-50' : 'hover:text-slate-600 hover:bg-slate-50'}`}><Database size={20}/></button>
+          <button onClick={() => setActiveTab('footprint')} className={`p-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'footprint' ? 'text-blue-600 bg-blue-50' : 'hover:text-slate-600 hover:bg-slate-50'}`}><Activity size={20}/></button>
         </div>
       </nav>
 
@@ -150,6 +153,7 @@ export default function ObservatoryDashboard() {
           </header>
 
           {/* Master Grid Area */}
+          {activeTab === 'live' && (
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_450px] gap-6 flex-1 min-h-[600px] pb-6">
             
             {/* Left Column (Map & AI) */}
@@ -300,9 +304,13 @@ export default function ObservatoryDashboard() {
 
             </div>
           </div>
+          )}
+          {activeTab === 'predict' && <ForecastingPanel totalDemand={totalDemand} />}
+          {activeTab === 'footprint' && <DigitalFootprint />}
           
         </div>
       </main>
+      <AquaBot context={{ totalDemand, anomalyCount, network, activeZone }} />
     </div>
   );
 }

@@ -2,12 +2,27 @@ const { getHouseById } = require('./network');
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-const deriveStatus = ({ flow_rate, pressure }) => {
+const deriveStatus = ({ flow_rate, pressure, timestamp }) => {
+  // Extract hour to contextualize alerts
+  let hour = new Date().getHours();
+  if (timestamp) {
+    hour = new Date(timestamp).getHours();
+  }
+
+  // Diagnostics: Hardware Errors
+  if (pressure > 85 || pressure < 2 || flow_rate < -0.1) {
+    return 'Sensor Error';
+  }
+
   if (flow_rate <= 0.35 || pressure <= 8) {
     return 'No Flow';
   }
 
-  if (flow_rate <= 2.5 || pressure <= 18) {
+  // Context-Aware Alert: small continuous flow during late night
+  if (flow_rate > 0.35 && flow_rate <= 2.5) {
+    if (hour >= 1 && hour <= 5) {
+      return 'Night Leak Warning';
+    }
     return 'Leak Risk';
   }
 
@@ -27,7 +42,8 @@ const normalizeReading = (input) => {
 
   const flowRate = clamp(Number(input.flow_rate ?? input.flowRate ?? 0), 0, 40);
   const pressure = clamp(Number(input.pressure ?? 0), 0, 90);
-  const status = input.status || deriveStatus({ flow_rate: flowRate, pressure });
+  const ts = input.timestamp || new Date().toISOString();
+  const status = input.status || deriveStatus({ flow_rate: flowRate, pressure, timestamp: ts });
 
   return {
     house_id: house.id,
@@ -36,7 +52,7 @@ const normalizeReading = (input) => {
     flow_rate: Number(flowRate.toFixed(2)),
     pressure: Number(pressure.toFixed(2)),
     status,
-    timestamp: input.timestamp || new Date().toISOString(),
+    timestamp: ts,
     is_mock: !!input.is_mock,
   };
 };

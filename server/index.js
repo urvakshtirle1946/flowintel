@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { initDb, storeReading, getLatestReadings, getReadingHistory } = require('./db');
+const { initDb, storeReading, getLatestReadings, getReadingHistory, getHouseStats } = require('./db');
 const { setupHardware } = require('./hardware');
 const { getNetworkSnapshot, houses, zones } = require('./network');
 
@@ -99,12 +99,18 @@ app.get('/api/readings/history', (req, res) => {
   });
 });
 
+app.get('/api/stats', (req, res) => {
+  getHouseStats((stats) => {
+    res.json(stats);
+  });
+});
+
 app.post('/api/ai-suggestions', async (req, res) => {
   if (!openai) {
     return res.status(500).json({ error: 'OpenAI SDK not initialized' });
   }
 
-  const { physicalNode, totalDemand, anomalyCount } = req.body;
+  const { physicalNode, totalDemand, anomalyCount, networkZones } = req.body;
 
   try {
     const prompt = `You are an AI Smart City Water Infrastructure Analyst.
@@ -138,6 +144,64 @@ If the physical flow matches 0.00 L/min, immediately suggest dispatching a field
     console.error('OpenAI Error:', error.message);
     res.status(500).json({ error: 'Failed to generate insights' });
   }
+});
+
+app.post('/api/ai-forecasting', async (req, res) => {
+  if (!openai) return res.status(500).json({ error: 'OpenAI not initialized' });
+  const { stats, totalDemand } = req.body;
+  try {
+    const prompt = `You are a predictive maintenance AI.
+Accumulated flow stats: ${JSON.stringify(stats)}
+Current Network Demand: ${totalDemand} L/min
+
+Return a JSON object with:
+"forecast_demand_lpm": (number, predicted peak demand considering network topology, make it realistic)
+"maintenance_suggestions": array of objects with { "house_id", "reason", "urgency" (High, Medium, Low) }
+Focus on stations with highest cumulative flow or fault count for predictions.`;
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "system", content: prompt }],
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" }
+    });
+    res.json(JSON.parse(completion.choices[0].message.content));
+  } catch (error) { res.status(500).json({ error: 'Failed to forecast' }); }
+});
+
+app.post('/api/ai-footprint', async (req, res) => {
+  if (!openai) return res.status(500).json({ error: 'OpenAI not initialized' });
+  const { physicalLiters, netflixHours, socialMediaHours, aiQueries } = req.body;
+  try {
+    const prompt = `You are a Digital Water Footprint Calculator.
+User's data: Physical water: ${physicalLiters} L. Netflix: ${netflixHours} hrs. Social: ${socialMediaHours} hrs. AI Prompts: ${aiQueries}
+
+Calculate the estimated digital water used to cool data centers: approx 5L per hr of streaming, 1L per social hr, 0.2L per AI query.
+Return JSON object:
+"digital_liters_total": (number)
+"breakdown_text": (short explanation)
+"conservation_tip": (1 actionable tip comparing physical to digital, engaging)`;
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "system", content: prompt }],
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" }
+    });
+    res.json(JSON.parse(completion.choices[0].message.content));
+  } catch (error) { res.status(500).json({ error: 'Failed' }); }
+});
+
+app.post('/api/aquabot', async (req, res) => {
+  if (!openai) return res.status(500).json({ error: 'OpenAI not initialized' });
+  const { message, context } = req.body;
+  try {
+    const prompt = `You are AquaBot, an AI assistant for the Smart Indore water observatory.
+Context: ${JSON.stringify(context)}
+User says: "${message}"
+Reply warmly, concisely, in French (as the dashboard is in French). Max 3 sentences.`;
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "system", content: prompt }],
+      model: "gpt-4o-mini",
+    });
+    res.json({ reply: completion.choices[0].message.content });
+  } catch (error) { res.status(500).json({ error: 'Failed' }); }
 });
 
 server.listen(PORT, () => {

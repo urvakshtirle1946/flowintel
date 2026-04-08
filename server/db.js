@@ -34,9 +34,18 @@ const initDb = () => {
       )
     `);
 
+    db.run(`
+      CREATE TABLE IF NOT EXISTS house_stats (
+        house_id TEXT PRIMARY KEY,
+        cumulative_flow_liters REAL DEFAULT 0,
+        fault_count INTEGER DEFAULT 0
+      )
+    `);
+
     // Wipe out the old dummy data so the demo starts totally fresh!
     db.run(`DELETE FROM flow_data`);
     db.run(`DELETE FROM current_status`);
+    db.run(`DELETE FROM house_stats`);
   });
 };
 
@@ -52,6 +61,17 @@ const storeReading = (reading) => {
     db.run(
       `INSERT OR REPLACE INTO current_status (house_id, flow_rate, pressure, status, last_updated) VALUES (?, ?, ?, ?, ?)`,
       [house_id, flow_rate, pressure, status, timestamp],
+    );
+
+    // Fast accumulation for demo purposes (adds the L/min value directly each tick)
+    const isFault = (status !== 'Normal' && status !== 'No Flow') ? 1 : 0;
+    db.run(
+      `INSERT INTO house_stats (house_id, cumulative_flow_liters, fault_count) 
+       VALUES (?, ?, ?) 
+       ON CONFLICT(house_id) DO UPDATE SET 
+       cumulative_flow_liters = cumulative_flow_liters + excluded.cumulative_flow_liters,
+       fault_count = fault_count + excluded.fault_count`,
+      [house_id, flow_rate, isFault]
     );
   });
 };
@@ -92,4 +112,15 @@ const getReadingHistory = ({ houseId, limit = 24 }, cb) => {
   );
 };
 
-module.exports = { initDb, storeReading, getLatestReadings, getReadingHistory };
+const getHouseStats = (cb) => {
+  db.all(`SELECT house_id, cumulative_flow_liters, fault_count FROM house_stats`, [], (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      cb([]);
+    } else {
+      cb(rows);
+    }
+  });
+};
+
+module.exports = { initDb, storeReading, getLatestReadings, getReadingHistory, getHouseStats };
