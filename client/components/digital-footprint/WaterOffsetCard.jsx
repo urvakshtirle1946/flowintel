@@ -1,15 +1,46 @@
 'use client';
 
 import { Droplet, CheckCircle2, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import OffsetActionList from './OffsetActionList';
 import ProgressBar from './ProgressBar';
 
 export default function WaterOffsetCard({ totalWater, plan, checkedMap, onToggle, reminders, onToggleReminder, checkedOffset }) {
   const totalOffset = plan?.totalOffset || 0;
   const balanced = checkedOffset >= totalWater && totalWater > 0;
+  const [celebrate, setCelebrate] = useState(false);
+
+  useEffect(() => {
+    if (balanced) {
+      setCelebrate(true);
+      const id = setTimeout(() => setCelebrate(false), 2400);
+      return () => clearTimeout(id);
+    }
+    return undefined;
+  }, [balanced]);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl shadow-xl p-6 flex flex-col gap-5">
+    <div className="relative bg-white border border-slate-200 rounded-3xl shadow-xl p-6 flex flex-col gap-5 overflow-hidden">
+      {celebrate && (
+        <div className="pointer-events-none absolute inset-0">
+          {[
+            { left: '15%', delay: '0s' },
+            { left: '30%', delay: '0.1s' },
+            { left: '45%', delay: '0.2s' },
+            { left: '60%', delay: '0.05s' },
+            { left: '75%', delay: '0.15s' },
+            { left: '88%', delay: '0.25s' },
+          ].map((confetti, idx) => (
+            <span
+              key={`confetti-${idx}`}
+              className="absolute -top-4 text-lg"
+              style={{ left: confetti.left, animation: `confetti 1.6s ease-in-out ${confetti.delay} forwards` }}
+            >
+              🎉
+            </span>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total Digital Usage</p>
@@ -53,6 +84,21 @@ export default function WaterOffsetCard({ totalWater, plan, checkedMap, onToggle
           Balanced
         </div>
       )}
+      <style jsx>{`
+        @keyframes confetti {
+          0% {
+            transform: translateY(0) scale(0.9) rotate(0deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(120px) scale(1.2) rotate(18deg);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }
