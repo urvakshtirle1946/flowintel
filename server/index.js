@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const { initDb, storeReading, getLatestReadings, getReadingHistory, getHouseStats } = require('./db');
+const { initAivenDb, getAivenHistory } = require('./clickhouse');
 const { setupHardware } = require('./hardware');
 const { getNetworkSnapshot, houses, zones } = require('./network');
 
@@ -31,6 +32,7 @@ app.use(cors());
 app.use(express.json());
 
 initDb();
+initAivenDb();
 
 io.on('connection', (socket) => {
   console.log('A client connected:', socket.id);
@@ -45,7 +47,7 @@ io.on('connection', (socket) => {
 });
 
 const handleSensorData = (reading) => {
-  console.log('Received sensor data:', reading);
+  // console.log('Received sensor data:', reading.house_id, reading.status); // Commented out to avoid terminal flood
   storeReading(reading);
   io.emit('sensorUpdate', reading);
 };
@@ -85,13 +87,24 @@ app.get('/api/readings/latest', (req, res) => {
   });
 });
 
-app.get('/api/readings/history', (req, res) => {
+app.get('/api/readings/history', async (req, res) => {
   const houseId = String(req.query.houseId || '').trim();
   const limit = Number(req.query.limit || 24);
 
   if (!houseId) {
     res.status(400).json({ error: 'houseId query parameter is required.' });
     return;
+  }
+
+  // Attempt to fetch robust analytics data from Aiven. 
+  // If the cloud DB is unreachable or lacks the client, fallback safely to SQLite.
+  try {
+    const aivenRows = await getAivenHistory({ houseId, limit });
+    if (aivenRows && aivenRows.length > 0) {
+      return res.json(aivenRows);
+    }
+  } catch (err) {
+    console.error("Aiven fetch failed, falling back to SQLite");
   }
 
   getReadingHistory({ houseId, limit }, (rows) => {
@@ -195,7 +208,7 @@ app.post('/api/aquabot', async (req, res) => {
     const prompt = `You are AquaBot, an AI assistant for the Smart Indore water observatory.
 Context: ${JSON.stringify(context)}
 User says: "${message}"
-Reply warmly, concisely, in French (as the dashboard is in French). Max 3 sentences.`;
+Reply warmly, concisely, in English. Max 3 sentences.`;
     const completion = await openai.chat.completions.create({
       messages: [{ role: "system", content: prompt }],
       model: "gpt-4o-mini",

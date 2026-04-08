@@ -5,7 +5,7 @@ import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
 export default function AquaBot({ context }: { context: any }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'bot', text: string}[]>([{
-    role: 'bot', text: 'Bonjour ! Je suis AquaBot. Comment puis-je vous aider avec vos données d\'eau aujourd\'hui ?'
+    role: 'bot', text: 'Hello! I am AquaBot. How can I help you with your water data today?'
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function AquaBot({ context }: { context: any }) {
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Désolé, je rencontre des problèmes de connexion.' }]);
+      setMessages(prev => [...prev, { role: 'bot', text: 'Sorry, I am having trouble connecting to the network.' }]);
     } finally {
       setLoading(false);
     }
@@ -94,7 +94,7 @@ export default function AquaBot({ context }: { context: any }) {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && sendMessage()}
-              placeholder="Posez une question à l'IA..."
+              placeholder="Ask the AI a question..."
               className="flex-1 bg-transparent border-none outline-none text-sm text-slate-800 py-1"
             />
             <button 

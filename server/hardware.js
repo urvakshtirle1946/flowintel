@@ -31,29 +31,49 @@ const buildMockReading = (house) => {
   });
 };
 
-const setupHardware = (onDataReceived) => {
-  const portName = process.env.SERIAL_PORT || 'COM7';
-
-  let port;
-  let parser;
+const setupHardware = async (onDataReceived) => {
+  let portName = process.env.SERIAL_PORT;
 
   try {
-    port = new SerialPort({
+    if (!portName) {
+      const ports = await SerialPort.list();
+      
+      console.log('=== Active Serial Ports ===');
+      if (ports.length === 0) console.log('  No serial ports detected on this system.');
+      ports.forEach(p => console.log(` - ${p.path} | Manufacturer: ${p.manufacturer || 'Unknown'} | VendorID: ${p.vendorId || 'N/A'}`));
+      console.log('===========================');
+
+      const detectedPort = ports.find((p) => 
+        (p.manufacturer && p.manufacturer.toLowerCase().includes('arduino')) ||
+        (p.vendorId && p.vendorId.toLowerCase() === '2341') ||
+        (p.vendorId && p.vendorId.toLowerCase() === '1a86') || // CH340 serial chip commonly used in Arduino clones
+        (p.manufacturer && p.manufacturer.toLowerCase().includes('wch.cn'))
+      );
+      if (detectedPort) {
+        portName = detectedPort.path;
+        console.log(`Auto-detected Arduino on port: ${portName}`);
+      } else {
+        portName = 'COM7'; // fallback
+        console.log(`Could not auto-detect Arduino, falling back to: ${portName}`);
+      }
+    }
+
+    const port = new SerialPort({
       path: portName,
       baudRate: 9600,
       autoOpen: false,
     });
 
-    parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
+    const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
 
     port.open((err) => {
       if (err) {
         console.warn(`Could not open real serial port ${portName}:`, err.message);
+        startMockMode(onDataReceived);
       } else {
         console.log(`Successfully connected to Arduino on ${portName}`);
+        startMockMode(onDataReceived);
       }
-      // Start mock mode for other houses regardless of serial connection
-      startMockMode(onDataReceived);
     });
 
     parser.on('data', (data) => {
@@ -77,7 +97,7 @@ const startMockMode = (onDataReceived) => {
   console.log('--- STARTING BACKGROUND SIMULATION FOR DUMMY NODES ---');
   setInterval(() => {
     houses.forEach((house) => {
-      // SKIP house_1 so it only updates from real Arduino data
+      // STRICTLY SKIP house_1 so it ONLY uses real Arduino data
       if (house.id === 'house_1') return;
 
       const reading = buildMockReading(house);

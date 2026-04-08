@@ -40,23 +40,23 @@ export default function ForecastingPanel({ totalDemand }: { totalDemand: number 
           <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
             <TrendingUp size={20} />
           </div>
-          <h3 className="font-bold text-slate-800">Prévision de la Demande IA (24h)</h3>
+          <h3 className="font-bold text-slate-800">AI Demand Forecast (24h)</h3>
           {loading && <Loader2 size={16} className="animate-spin text-slate-400 ml-auto" />}
         </div>
         
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           {data ? (
             <div className="flex flex-col items-center text-center gap-2 animate-in fade-in zoom-in duration-500">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Demande de pointe prévue</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Expected Peak Demand</span>
               <div className="text-5xl font-black text-indigo-600 tracking-tighter">
                 {data.forecast_demand_lpm} <span className="text-2xl text-indigo-400 font-bold">L/m</span>
               </div>
               <p className="text-sm text-slate-500 mt-2 bg-slate-50 px-4 py-2 border border-slate-100 rounded-lg">
-                La demande devrait augmenter en raison des modèles historiques et des tendances actuelles du réseau.
+                Demand is expected to rise based on historical patterns and current network trends.
               </p>
             </div>
           ) : (
-             <span className="text-slate-400 text-sm">Génération des prévisions...</span>
+             <span className="text-slate-400 text-sm">Generating forecasts...</span>
           )}
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function ForecastingPanel({ totalDemand }: { totalDemand: number 
           <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
             <CalendarCheck size={20} />
           </div>
-          <h3 className="font-bold text-slate-800">Maintenance Prédictive</h3>
+          <h3 className="font-bold text-slate-800">Predictive Maintenance</h3>
         </div>
         
         <div className="flex-1 flex flex-col gap-3 overflow-y-auto">
@@ -79,7 +79,7 @@ export default function ForecastingPanel({ totalDemand }: { totalDemand: number 
                    <div className="flex justify-between items-center">
                      <span className="font-bold text-slate-800 uppercase text-xs">{suggestion.house_id}</span>
                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                       Urgence: {suggestion.urgency}
+                       Urgency: {suggestion.urgency}
                      </span>
                    </div>
                    <p className="text-slate-600 text-xs">{suggestion.reason}</p>
@@ -88,7 +88,7 @@ export default function ForecastingPanel({ totalDemand }: { totalDemand: number 
             ))
           ) : (
             <div className="flex justify-center items-center h-full text-sm text-slate-400">
-              {loading ? "Recherche de modèles d'usure..." : "Aucune suggestion de maintenance."}
+              {loading ? "Analyzing wear patterns..." : "No maintenance suggestions at this time."}
             </div>
           )}
         </div>

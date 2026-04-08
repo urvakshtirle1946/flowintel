@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const { insertSensorData } = require('./clickhouse');
 
 const dbPath = path.resolve(__dirname, 'flow_intel.sqlite');
 
@@ -51,6 +52,9 @@ const initDb = () => {
 
 const storeReading = (reading) => {
   const { house_id, flow_rate, pressure, status, timestamp } = reading;
+
+  // Dual-Write: Stream historical telemetry securely to Aiven ClickHouse
+  insertSensorData(reading);
 
   db.serialize(() => {
     db.run(
