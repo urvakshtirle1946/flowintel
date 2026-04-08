@@ -16,6 +16,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'FlowIntel Control Room',
   description: 'Smart municipal water distribution monitoring on a live geographic map.',
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({

@@ -1,6 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useSocket } from '../hooks/useSocket';
 import Map from '../components/Map';
 import { AssetSelection } from '../utils/types';
@@ -101,9 +102,17 @@ export default function ObservatoryDashboard() {
           <header className="flex flex-col gap-5 shrink-0">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl lg:text-3xl font-semibold text-slate-800 tracking-tight">L'observatoire de l'eau (Smart Indore)</h1>
-              <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm transition-colors text-blue-600">
-                <Settings size={16} /> Personnaliser l'affichage
-              </button>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/ai-analysis"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-sm transition-colors"
+                >
+                  <BrainCircuit size={16} /> AI Analyst
+                </Link>
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm transition-colors text-blue-600">
+                  <Settings size={16} /> Personnaliser l'affichage
+                </button>
+              </div>
             </div>
             
             {/* Stat Badges */}
@@ -130,7 +139,7 @@ export default function ObservatoryDashboard() {
                 <CheckCircle size={16} className="text-green-500" />
                 <span className="text-sm text-slate-500 flex flex-col justify-center leading-tight">
                   <strong className="text-green-700">{healthyCount}</strong> 
-                  <span className="text-[10px] uppercase tracking-wider font-bold">Stations en état normal</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold">Stations en Ã©tat normal</span>
                 </span>
               </div>
               
@@ -178,7 +187,7 @@ export default function ObservatoryDashboard() {
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex-1 flex flex-col min-h-[220px]">
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
                   <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                    Dernières analyses (OpenAI)
+                    DerniÃ¨res analyses (OpenAI)
                   </h3>
                   <button 
                     onClick={generateInsights}
@@ -186,7 +195,7 @@ export default function ObservatoryDashboard() {
                     className="text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg border border-purple-200 transition-colors flex items-center gap-2 disabled:opacity-50 shadow-sm"
                   >
                     {isGenerating ? <Loader2 size={12} className="animate-spin text-purple-700" /> : <Zap size={12} className="text-purple-600" />}
-                    Générer des Insights
+                    GÃ©nÃ©rer des Insights
                   </button>
                 </div>
                 <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
@@ -203,7 +212,7 @@ export default function ObservatoryDashboard() {
                   ) : (
                     <div className="col-span-full flex flex-col items-center justify-center text-slate-400 h-full py-8 gap-3">
                       <BrainCircuit size={32} className="opacity-20 text-slate-600" />
-                      <p className="text-sm">Cliquez sur générer pour analyser les flux en temps réel par l'IA.</p>
+                      <p className="text-sm">Cliquez sur gÃ©nÃ©rer pour analyser les flux en temps rÃ©el par l'IA.</p>
                     </div>
                   )}
                 </div>
@@ -224,7 +233,7 @@ export default function ObservatoryDashboard() {
                 
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                   <p className="text-[10px] uppercase text-slate-400 font-bold mb-1 flex items-center gap-2">
-                    <Activity size={12} className={isConnected ? "text-green-500" : "text-red-500"} /> Flux de Télémétrie en Direct
+                    <Activity size={12} className={isConnected ? "text-green-500" : "text-red-500"} /> Flux de TÃ©lÃ©mÃ©trie en Direct
                   </p>
                   
                   {allNodes.map(node => {
@@ -247,7 +256,7 @@ export default function ObservatoryDashboard() {
                                {node.name}
                                {isRealTime && <span className="px-1.5 py-0.5 rounded bg-indigo-100 border border-indigo-200 text-indigo-700 text-[9px] uppercase tracking-wider font-bold">Hardware</span>}
                              </h4>
-                             <p className="text-[11px] text-slate-500">{node.label} • {reading?.pressure ? reading.pressure.toFixed(1) + ' kPa' : '---'}</p>
+                             <p className="text-[11px] text-slate-500">{node.label} â€¢ {reading?.pressure ? reading.pressure.toFixed(1) + ' kPa' : '---'}</p>
                            </div>
                         </div>
                         
@@ -275,7 +284,7 @@ export default function ObservatoryDashboard() {
                     <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-inner">
                       <div className="flex flex-col items-center">
                         <span className="text-2xl font-bold text-slate-800 tracking-tight">{healthyPercent}%</span>
-                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Sécurisé</span>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">SÃ©curisÃ©</span>
                       </div>
                     </div>
                   </div>
@@ -295,7 +304,7 @@ export default function ObservatoryDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                        <div className="w-2.5 h-2.5 rounded-sm bg-slate-200 shadow-sm"></div>
-                       <span><strong className="text-slate-800 text-slate-400">0</strong> Pas de données</span>
+                       <span><strong className="text-slate-800 text-slate-400">0</strong> Pas de donnÃ©es</span>
                     </div>
                   </div>
 
